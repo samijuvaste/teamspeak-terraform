@@ -102,12 +102,13 @@ resource "upcloud_firewall_rules" "ts_fw" {
 }
 
 # --- Cloudflare DNS ---
-resource "cloudflare_record" "ts_dns" {
+resource "cloudflare_dns_record" "ts_dns" {
   zone_id = var.cloudflare_zone_id
   name    = var.subdomain
   # The first network interface [0] is the public interface
   content = upcloud_server.teamspeak.network_interface[0].ip_address
   type    = "A"
+  ttl     = 1
 
   # CRITICAL: Proxy MUST be false because Cloudflare's free tier proxy doesn't support UDP. 
   # If this is true, nobody will be able to connect to the server.
