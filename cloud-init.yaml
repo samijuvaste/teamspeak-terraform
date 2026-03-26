@@ -1,0 +1,67 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+
+packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - software-properties-common
+  - docker.io
+  - docker-compose-plugin
+  - fail2ban
+
+disk_setup:
+  /dev/vdb:
+    table_type: "gpt"
+    layout: true
+    overwrite: false
+
+fs_setup:
+  - label: data
+    filesystem: "ext4"
+    device: "/dev/vdb1"
+    replace_fs: false
+
+mounts:
+  - ["LABEL=data", "/opt/teamspeak/data", "ext4", "defaults,nofail", "0", "2"]
+
+# Terraform will inject the local docker-compose.yaml content here
+write_files:
+  - path: /opt/teamspeak/docker-compose.yaml
+    content: |
+      ${indent(6, docker_compose_content)}
+  - path: /etc/fail2ban/jail.local
+    content: |
+      [sshd]
+      enabled = true
+      port = ssh
+      filter = sshd
+      logpath = /var/log/auth.log
+      maxretry = 3
+  - path: /etc/ssh/sshd_config
+    content: |
+      Port 22
+      Protocol 2
+      PermitRootLogin no
+      PasswordAuthentication no
+      PubkeyAuthentication yes
+      ChallengeResponseAuthentication no
+      UsePAM no
+      X11Forwarding no
+      AllowUsers teamspeak
+      MaxAuthTries 3
+      LoginGraceTime 60
+
+runcmd:
+  - systemctl enable docker
+  - systemctl start docker
+  - systemctl enable fail2ban
+  - systemctl restart fail2ban
+  - systemctl restart sshd
+  - usermod -aG docker teamspeak
+  - mkdir -p /opt/teamspeak/data/teamspeak /opt/teamspeak/data/mariadb
+  - chown -R 999:999 /opt/teamspeak/data/mariadb
+  - chmod -R 777 /opt/teamspeak/data/teamspeak
+  - chown -R teamspeak:teamspeak /opt/teamspeak/docker-compose.yaml
+  - cd /opt/teamspeak && sudo -u teamspeak docker compose up -d
