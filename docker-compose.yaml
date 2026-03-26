@@ -1,0 +1,73 @@
+services:
+  teamspeak:
+    image: teamspeaksystems/teamspeak6-server:latest
+    container_name: teamspeak
+    restart: unless-stopped
+    ports:
+      - "9987:9987/udp" # Default Voice Port
+      - "30033:30033/tcp" # File Transfer Port
+      - "10022:10022/tcp" # SSH Query Interface
+    environment:
+      - TSSERVER_LICENSE_ACCEPTED=accept
+      # Enable and configure Server Query interfaces
+      - TSSERVER_QUERY_SSH_ENABLED=1
+      # Override the default random ServerAdmin password for Query interfaces
+      - TSSERVER_QUERY_ADMIN_PASSWORD=${QUERY_ADMIN_PASSWORD}
+      # Logging options
+      - TSSERVER_APPEND_LOGS=1
+      # Database settings
+      - TSSERVER_DATABASE_PLUGIN=mariadb
+      - TSSERVER_DATABASE_SQL_CREATE_PATH=create_mariadb
+      - TSSERVER_DATABASE_HOST=mariadb
+      - TSSERVER_DATABASE_PORT=3306
+      - TSSERVER_DATABASE_NAME=teamspeak
+      - TSSERVER_DATABASE_USERNAME=teamspeak
+      - TSSERVER_DATABASE_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - teamspeak-data:/var/tsserver
+    depends_on:
+      mariadb:
+        condition: service_healthy
+
+  mariadb:
+    image: mariadb:latest
+    container_name: mariadb
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=teamspeak
+      - MYSQL_USER=teamspeak
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    restart: unless-stopped
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - TZ=${TIMEZONE}
+    # Check for updates weekly on Monday at 04:00 and clean up old images
+    command: --cleanup --schedule "0 0 4 * * 1" teamspeak mariadb
+
+volumes:
+  teamspeak-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/teamspeak/data/teamspeak
+  mariadb-data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /opt/teamspeak/data/mariadb
