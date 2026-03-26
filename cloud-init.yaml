@@ -39,17 +39,15 @@ write_files:
       filter = sshd
       backend = systemd
       maxretry = 3
-  - path: /etc/ssh/sshd_config
+  - path: /etc/ssh/sshd_config.d/99-teamspeak-ssh.conf
     content: |
-      Port 22
       PermitRootLogin no
       PasswordAuthentication no
       PubkeyAuthentication yes
-      ChallengeResponseAuthentication no
-      UsePAM no
+      KbdInteractiveAuthentication no
+      UsePAM yes
       X11Forwarding no
       AllowUsers teamspeak
-      MaxAuthTries 3
       LoginGraceTime 60
 
 runcmd:
