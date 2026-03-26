@@ -2,6 +2,14 @@
 package_update: true
 package_upgrade: true
 
+users:
+  - name: teamspeak
+    groups: sudo, docker
+    shell: /bin/bash
+    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    ssh_authorized_keys:
+      - ${SSH_PUBLIC_KEY}
+
 packages:
   - apt-transport-https
   - ca-certificates
@@ -51,14 +59,11 @@ write_files:
       LoginGraceTime 60
 
 runcmd:
-  - systemctl enable docker
-  - systemctl start docker
-  - systemctl enable fail2ban
-  - systemctl restart fail2ban
-  - systemctl restart sshd
-  - usermod -aG docker teamspeak
+  - systemctl enable --now docker
+  - systemctl enable --now fail2ban
   - mkdir -p /opt/teamspeak/data/teamspeak /opt/teamspeak/data/mariadb
+  - chown -R teamspeak:teamspeak /opt/teamspeak
   - chown -R 999:999 /opt/teamspeak/data/mariadb
   - chmod -R 777 /opt/teamspeak/data/teamspeak
-  - chown -R teamspeak:teamspeak /opt/teamspeak/docker-compose.yaml
+  - systemctl restart sshd
   - cd /opt/teamspeak && sudo -u teamspeak docker compose up -d
