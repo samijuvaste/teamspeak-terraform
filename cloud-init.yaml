@@ -16,7 +16,7 @@ packages:
   - curl
   - software-properties-common
   - docker.io
-  - docker-compose-plugin
+  - docker-compose-v2
   - fail2ban
 
 disk_setup:
@@ -65,5 +65,5 @@ runcmd:
   - chown -R teamspeak:teamspeak /opt/teamspeak
   - chown -R 999:999 /opt/teamspeak/data/mariadb
   - chmod -R 777 /opt/teamspeak/data/teamspeak
-  - systemctl restart sshd
-  - cd /opt/teamspeak && sudo -u teamspeak docker compose up -d
+  - systemctl restart ssh
+  - ["sh", "-c", "cd /opt/teamspeak && sudo -u teamspeak docker compose up -d"]
