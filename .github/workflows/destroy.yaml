@@ -1,16 +1,14 @@
-name: CI/CD Pipeline
+name: Destroy Server
+
+on:
+  workflow_dispatch:
+
 permissions:
   contents: read
 
-on:
-  push:
-    branches:
-      - main
-  workflow_dispatch:
-
 jobs:
-  validate_and_deploy:
-    name: Terraform Deploy
+  destroy_server:
+    name: Destroy Server Target
     runs-on: ubuntu-latest
     environment: Main
     concurrency: deploy-group
@@ -26,15 +24,8 @@ jobs:
       - name: Terraform Init
         run: terraform init
 
-      - name: Terraform Format
-        run: terraform fmt -check
-
-      - name: Terraform Validate
-        run: terraform validate
-
-      - name: Terraform Apply
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve
+      - name: Terraform Destroy Targets
+        run: terraform destroy -target=upcloud_server.teamspeak -target=cloudflare_dns_record.ts_dns -auto-approve
         env:
           TF_VAR_cloudflare_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           TF_VAR_cloudflare_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
