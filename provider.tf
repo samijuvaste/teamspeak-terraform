@@ -1,5 +1,11 @@
 terraform {
-  required_version = ">= 1.0.0"
+  required_version = ">= 1.1.0"
+  cloud {
+    organization = "samijuvaste"
+    workspaces {
+      name = "teamspeak-terraform"
+    }
+  }
   required_providers {
     upcloud = {
       source  = "UpCloudLtd/upcloud"
