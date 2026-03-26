@@ -19,15 +19,10 @@ resource "upcloud_server" "teamspeak" {
     type = "utility"
   }
 
-  login {
-    user            = "teamspeak"
-    keys            = [var.ssh_public_key]
-    create_password = false
-  }
-
   # Render the cloud-init file, passing in the rendered docker-compose file
   user_data = templatefile("${path.module}/cloud-init.yaml", {
     docker_compose_content = templatefile("${path.module}/docker-compose.yaml", {
+      SSH_PUBLIC_KEY       = var.ssh_public_key
       QUERY_ADMIN_PASSWORD = var.query_admin_password
       MYSQL_ROOT_PASSWORD  = var.mysql_root_password
       MYSQL_PASSWORD       = var.mysql_password
