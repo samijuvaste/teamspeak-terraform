@@ -4,6 +4,7 @@ resource "upcloud_server" "teamspeak" {
   plan     = var.server_plan
   metadata = true
   firewall = true
+  timezone = var.timezone
 
   template {
     storage = "Ubuntu Server 24.04 LTS (Noble Numbat)"
@@ -17,6 +18,10 @@ resource "upcloud_server" "teamspeak" {
 
   network_interface {
     type = "utility"
+  }
+
+  login {
+    password_delivery = "none"
   }
 
   # Render the cloud-init file, passing in the rendered docker-compose file
@@ -53,6 +58,8 @@ resource "upcloud_storage" "teamspeak_data" {
 # --- Firewall Rules ---
 resource "upcloud_firewall_rules" "ts_fw" {
   server_id = upcloud_server.teamspeak.id
+
+ # --- Inbound Rules ---
 
   firewall_rule {
     action                 = "accept"
@@ -93,6 +100,81 @@ resource "upcloud_firewall_rules" "ts_fw" {
   firewall_rule {
     action    = "drop"
     direction = "in"
+  }
+
+  # --- Outbound Rules ---
+
+  # DNS
+  firewall_rule {
+    action                 = "accept"
+    direction              = "out"
+    family                 = "IPv4"
+    protocol               = "udp"
+    destination_port_start = "53"
+    destination_port_end   = "53"
+  }
+
+  firewall_rule {
+    action                 = "accept"
+    direction              = "out"
+    family                 = "IPv4"
+    protocol               = "tcp"
+    destination_port_start = "53"
+    destination_port_end   = "53"
+  }
+
+  # HTTP (OS Updates/APT/keys)
+  firewall_rule {
+    action                 = "accept"
+    direction              = "out"
+    family                 = "IPv4"
+    protocol               = "tcp"
+    destination_port_start = "80"
+    destination_port_end   = "80"
+  }
+
+  # HTTPS
+  firewall_rule {
+    action                 = "accept"
+    direction              = "out"
+    family                 = "IPv4"
+    protocol               = "tcp"
+    destination_port_start = "443"
+    destination_port_end   = "443"
+  }
+
+  # NTP
+  firewall_rule {
+    action                 = "accept"
+    direction              = "out"
+    family                 = "IPv4"
+    protocol               = "udp"
+    destination_port_start = "123"
+    destination_port_end   = "123"
+  }
+
+  # TeamSpeak Accounting
+  firewall_rule {
+    action                 = "accept"
+    direction              = "out"
+    family                 = "IPv4"
+    protocol               = "tcp"
+    destination_port_start = "2008"
+    destination_port_end   = "2008"
+  }
+
+  # ICMP
+  firewall_rule {
+    action    = "accept"
+    direction = "out"
+    family    = "IPv4"
+    protocol  = "icmp"
+  }
+
+  # Drop all other outbound traffic
+  firewall_rule {
+    action    = "drop"
+    direction = "out"
   }
 }
 
