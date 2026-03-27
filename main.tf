@@ -61,6 +61,7 @@ resource "upcloud_firewall_rules" "ts_fw" {
 
   # --- Inbound Rules ---
 
+  # SSH
   firewall_rule {
     action                 = "accept"
     direction              = "in"
@@ -70,6 +71,7 @@ resource "upcloud_firewall_rules" "ts_fw" {
     destination_port_end   = "22"
   }
 
+  # TeamSpeak voice
   firewall_rule {
     action                 = "accept"
     direction              = "in"
@@ -79,6 +81,7 @@ resource "upcloud_firewall_rules" "ts_fw" {
     destination_port_end   = "9987"
   }
 
+  # TeamSpeak filetransfer
   firewall_rule {
     action                 = "accept"
     direction              = "in"
@@ -88,6 +91,7 @@ resource "upcloud_firewall_rules" "ts_fw" {
     destination_port_end   = "30033"
   }
 
+  # TeamSpeak ServerQuery (SSH)
   firewall_rule {
     action                 = "accept"
     direction              = "in"
@@ -95,6 +99,72 @@ resource "upcloud_firewall_rules" "ts_fw" {
     protocol               = "tcp"
     destination_port_start = "10022"
     destination_port_end   = "10022"
+  }
+
+  # --- Inbound Return Traffic (Stateless Firewall) ---
+
+  # DNS
+  firewall_rule {
+    action            = "accept"
+    direction         = "in"
+    family            = "IPv4"
+    protocol          = "udp"
+    source_port_start = "53"
+    source_port_end   = "53"
+  }
+  firewall_rule {
+    action            = "accept"
+    direction         = "in"
+    family            = "IPv4"
+    protocol          = "tcp"
+    source_port_start = "53"
+    source_port_end   = "53"
+  }
+
+  # HTTP/HTTPS
+  firewall_rule {
+    action            = "accept"
+    direction         = "in"
+    family            = "IPv4"
+    protocol          = "tcp"
+    source_port_start = "80"
+    source_port_end   = "80"
+  }
+  firewall_rule {
+    action            = "accept"
+    direction         = "in"
+    family            = "IPv4"
+    protocol          = "tcp"
+    source_port_start = "443"
+    source_port_end   = "443"
+  }
+  firewall_rule {
+    action            = "accept"
+    direction         = "in"
+    family            = "IPv4"
+    protocol          = "udp"
+    source_port_start = "443"
+    source_port_end   = "443"
+  }
+
+  # NTP
+  firewall_rule {
+    action            = "accept"
+    direction         = "in"
+    family            = "IPv4"
+    protocol          = "udp"
+    source_port_start = "123"
+    source_port_end   = "123"
+  }
+
+  # TeamSpeak Accounting
+  firewall_rule {
+    action            = "accept"
+    direction         = "in"
+    family            = "IPv4"
+    protocol          = "tcp"
+    source_port_start = "2008"
+    source_port_end   = "2008"
   }
 
   firewall_rule {
@@ -143,6 +213,15 @@ resource "upcloud_firewall_rules" "ts_fw" {
     destination_port_end   = "443"
   }
 
+  firewall_rule {
+    action                 = "accept"
+    direction              = "out"
+    family                 = "IPv4"
+    protocol               = "udp"
+    destination_port_start = "443"
+    destination_port_end   = "443"
+  }
+
   # NTP
   firewall_rule {
     action                 = "accept"
@@ -169,6 +248,49 @@ resource "upcloud_firewall_rules" "ts_fw" {
     direction = "out"
     family    = "IPv4"
     protocol  = "icmp"
+  }
+
+  # --- Outbound Return Traffic (Stateless Firewall) ---
+  # Allows responses to incoming connections back to the client
+
+  # Return traffic for SSH
+  firewall_rule {
+    action            = "accept"
+    direction         = "out"
+    family            = "IPv4"
+    protocol          = "tcp"
+    source_port_start = "22"
+    source_port_end   = "22"
+  }
+
+  # Return traffic for TeamSpeak voice
+  firewall_rule {
+    action            = "accept"
+    direction         = "out"
+    family            = "IPv4"
+    protocol          = "udp"
+    source_port_start = "9987"
+    source_port_end   = "9987"
+  }
+
+  # Return traffic for TeamSpeak filetransfer
+  firewall_rule {
+    action            = "accept"
+    direction         = "out"
+    family            = "IPv4"
+    protocol          = "tcp"
+    source_port_start = "30033"
+    source_port_end   = "30033"
+  }
+
+  # Return traffic for TeamSpeak ServerQuery (SSH)
+  firewall_rule {
+    action            = "accept"
+    direction         = "out"
+    family            = "IPv4"
+    protocol          = "tcp"
+    source_port_start = "10022"
+    source_port_end   = "10022"
   }
 
   # Drop all other outbound traffic
