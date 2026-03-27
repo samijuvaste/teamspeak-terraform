@@ -47,6 +47,8 @@ write_files:
       filter = sshd
       backend = systemd
       maxretry = 3
+      findtime  = 1d
+      bantime   = 2w
   - path: /etc/ssh/sshd_config.d/99-teamspeak-ssh.conf
     content: |
       PermitRootLogin no
