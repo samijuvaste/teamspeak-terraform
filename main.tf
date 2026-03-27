@@ -59,7 +59,7 @@ resource "upcloud_storage" "teamspeak_data" {
 resource "upcloud_firewall_rules" "ts_fw" {
   server_id = upcloud_server.teamspeak.id
 
- # --- Inbound Rules ---
+  # --- Inbound Rules ---
 
   firewall_rule {
     action                 = "accept"
